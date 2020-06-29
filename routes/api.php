@@ -19,7 +19,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('test', 'ScrapController@test');
 Route::group(['prefix' => 'hakore'], function () {
-    Route::get('/all', 'HakoreController@getList');
+    Route::get('/all', 'HakoreController@getList')->name('get.novels');
     Route::get('/novel/{url}', 'HakoreController@getNovelDetail');
     Route::get('/chapter/{novel}/{chapter}', 'HakoreController@getChapterDetail');
+    Route::get('/genrefilter', 'HakoreController@getGenreFilter');
+    Route::get('/genrelisturl', 'HakoreController@getListByGenreUrl');
+    Route::post('/search', 'HakoreController@search');
 });

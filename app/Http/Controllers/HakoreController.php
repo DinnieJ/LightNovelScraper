@@ -8,6 +8,7 @@ use Goutte\Client;
 use Exception;
 use App\Http\Resources\StoryResource;
 use App\Http\Resources\DetailResource;
+use App\Http\Resources\ListResource;
 use Config;
 use Html2Text\Html2Text;
 
@@ -37,20 +38,24 @@ class HakoreController extends Controller
                 'message' => 'The current list is empty'
             ], 404);
         }
-        $maxPage = $this->getNodes($html, "paging_item paging_prevnext next ");
-        $maxPageUrl = $this->getNodeAttrValue($maxPage[0], 'href');
-        $maxPageNum = \preg_match('/&page=([0-9]+)/', $maxPageUrl, $out);
+        $maxPageNodes = $this->getNodes($html, "paging_item paging_prevnext next ");
+        $maxPage = 1;
+        if(count($maxPageNodes) > 0) {
+            $maxPageUrl = $this->getNodeAttrValue($maxPageNodes[0], 'href');
+            \preg_match('/&page=([0-9]+)/', $maxPageUrl, $out);
+            $maxPage = (int) $out[1];
+        }
         $data = array();
         foreach ($novelNodes as $node) {
             array_push($data, new StoryResource(['content' => $this->getInnerHtml($node)]));
         }
-        return response()->json([
+        
+        return response()->json(new ListResource([
             'books' => $data,
-            'count' => count($data),
-            'currentPage' => $page,
-            'maxPage' => (int) $out[1],
-            'maxPageUrl' => $maxPageUrl
-        ], 200);
+            'genre' => $request->genre ?? null,
+            'maxPage' => $maxPage,
+            'currentPage' => $page
+        ]), 200);
     }
 
     public function getNovelDetail(Request $request, $url)
@@ -73,7 +78,7 @@ class HakoreController extends Controller
         $content = "";
         foreach ($this->getNodes($html, "", "", "p") as $node) {
             $txt = $this->getInnerHtml($node);
-            if (\preg_match("<img src=\"(.*)\" alt=\".*\">", $txt, $imgSrc)) {
+            if (\preg_match("/<img src=\"(.*)\" alt=\".*\">/", $txt, $imgSrc)) {
                 $content .= "--img--[" . $imgSrc[1] . "]\n";
             } else {
                 $content .= $txt . "\n";
@@ -85,7 +90,47 @@ class HakoreController extends Controller
         ], 200);
     }
 
-    public function getGenre()
+    public function getGenreFilter(Request $request)
     {
+        $pageUrl = Config::get('app.hakore_source_url') . "/tim-kiem-nang-cao";
+        //dd($pageUrl);
+        $html = $this->getHtmlData($pageUrl);
+        $nodes = $this->getNodes($html, "search-gerne_item include col-4 col-md-3 col-lg-4 col-xl-3");
+        $genres = [];
+
+        foreach($nodes as $node) {
+            $inner = $this->getInnerHtml($node);
+
+            \preg_match("/<label class=\"genre_label\" data-genre-id=\"(.*)\">/", $inner, $id);
+            \preg_match("/<span class=\"gerne-name\">(.*)<\/span>/", $inner, $name);
+            $genres[$name[1]] = $id[1];
+        }
+
+        return response()->json([
+            'genres' => $genres
+        ], 200);
+    }
+
+    public function getListByGenreUrl(Request $request) {
+        $pageUrl = Config::get('app.hakore_source_url') ."/danh-sach";
+        $html = $this->getHtmlData($pageUrl, [
+            '.section-content' => 2,
+            'ul' => 0
+        ]);
+        $nodes = $this->getNodes($html, "filter-type_item");
+        $genres = [];
+        foreach($nodes as $node) {
+            \preg_match("/<a href=\"(.*)\">(.*)<\/a>/", $this->getInnerHtml($node), $output);
+
+            $genres[$output[2]] = \preg_replace("/https:\/\/ln.hako.re\/the-loai\//", Config::get('app.hakore_base_url') . "/all?genre=", $output[1]);
+        }
+        
+        return response()->json([
+            'urls' => $genres
+        ], 200);
+    }
+
+    public function search(Request $request) {
+
     }
 }
