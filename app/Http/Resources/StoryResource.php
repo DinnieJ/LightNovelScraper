@@ -16,6 +16,7 @@ class StoryResource extends JsonResource
      */
     public function toArray($request)
     {
+        $baseUrl = \URL::to("/") . "/api/hakore";
         //dd($this['content']);
         $urls = $this->getAllUrl();
         $img = $this->getImg();
@@ -26,8 +27,6 @@ class StoryResource extends JsonResource
             'latest_chapter_url' => $urls['latest_chapter'],
             'latest_vol' => $this->getLatestVol(),
             'img_url' => $img,
-            //'base64_img' => $this->getBase64Image($img),
-
         ];
     }
 
@@ -60,7 +59,7 @@ class StoryResource extends JsonResource
     private function getAllUrl() {
         $node = $this->getNodes($this['content'], "", "", "a");
         return [
-            'url' => $this->getNodeAttrValue($node[2], 'href'),
+            'url' => \Config::get('app.hakore_base_url') . \str_replace('truyen', 'novel',  $this->getNodeAttrValue($node[2], 'href')),
             'latest_chapter' => $this->getNodeAttrValue($node[0], 'href'),
         ];
     }

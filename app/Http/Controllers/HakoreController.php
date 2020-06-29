@@ -44,6 +44,10 @@ class HakoreController extends Controller
         ], 200);
     }
 
+    public function getNovelDetail() {
+
+    }
+
     public function getGenre() {
 
     }

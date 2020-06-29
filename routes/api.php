@@ -20,4 +20,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::get('test', 'ScrapController@test');
 Route::group(['prefix' => 'hakore'], function () {
     Route::get('/all', 'HakoreController@getList');
+    Route::get('/novel/{url}', 'HakoreController@getNovelDetail');
 });
