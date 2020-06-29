@@ -60,7 +60,7 @@ class StoryResource extends JsonResource
         $node = $this->getNodes($this['content'], "", "", "a");
         return [
             'url' => \Config::get('app.hakore_base_url') . \str_replace('truyen', 'novel',  $this->getNodeAttrValue($node[2], 'href')),
-            'latest_chapter' => $this->getNodeAttrValue($node[0], 'href'),
+            'latest_chapter' => \Config::get('app.hakore_base_url') . \preg_replace('/truyen/', 'chapter', $this->getNodeAttrValue($node[0], 'href')),
         ];
     }
 }

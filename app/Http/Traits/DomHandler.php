@@ -14,12 +14,15 @@ trait DomHandler
         } catch (\Exception $e) {
             throw new Exception('Lost connection to server');
         }
-        foreach($filter as $attr => $pos) {
+        foreach ($filter as $attr => $pos) {
             $crawler = $crawler->filter($attr)->eq($pos);
         }
-        $html = $crawler->html();
+        try {
+            $html = $crawler->html();
+        } catch (\Exception $e) {
+            $html = null;
+        }
         return $html;
-
     }
     public function getNodes($html, $class = "", $id = "", $tag = "*", $customAttr = array())
     {
@@ -63,5 +66,10 @@ trait DomHandler
         $element = $dom->getElementsByTagName($tag);
 
         return $element;
+    }
+
+    public function trimEndline($html)
+    {
+        return trim(preg_replace('/\s+/', ' ', $html));
     }
 }

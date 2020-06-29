@@ -21,4 +21,5 @@ Route::get('test', 'ScrapController@test');
 Route::group(['prefix' => 'hakore'], function () {
     Route::get('/all', 'HakoreController@getList');
     Route::get('/novel/{url}', 'HakoreController@getNovelDetail');
+    Route::get('/chapter/{novel}/{chapter}', 'HakoreController@getChapterDetail');
 });

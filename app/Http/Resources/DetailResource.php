@@ -16,12 +16,13 @@ class DetailResource extends JsonResource
      */
     public function toArray($request)
     {
+        $authorNames = $this->getAuthor();
         return [
             'title' => $this->getTitle(),
             'cover' => $this->getCover(),
-            'genre' => $this->getGenres(),
-            'author' => $this->getAuthor(),
-            'artist'  => $this->getArtist(),
+            'genres' => $this->getGenres(),
+            'author' => $authorNames['author'],
+            'artist'  => $authorNames['artist'],
             'volumes' => $this->getVolumes()
         ];
     }
@@ -41,20 +42,25 @@ class DetailResource extends JsonResource
         $genres = [];
 
         foreach($genresNodes as $node) {
-            array_push($genres, $this->getInnerHtml($node));
+            $genre = $this->getInnerHtml($node);
+            if(!\preg_match('/<i class=\".*\">.*<\/i>/', $genre)) {
+                array_push($genres, $this->trimEndline($this->getInnerHtml($node)));
+            }
         } 
 
         return $genres;
     }
 
     private function getAuthor() {
-        $node = $this->getNodes($this['detail'], "", "", "a")[4];
-        return $this->getInnerHtml($node);
-    }
-
-    private function getArtist() {
-        $node = $this->getNodes($this['detail'], "", "", "a")[5];
-        return $this->getInnerHtml($node);
+        $nodes = $this->getNodes($this['detail'], "series-information", "", "div");
+        $html = $this->trimEndline($this->getInnerHtml($nodes[0]));
+        //dd($html);
+        $authorPreg = \preg_match("/<div class=\"info-item\"> <span class=\"info-name\">Tác giả:<\/span> <span class=\"info-value \"><a href=\".*\">(.*)<\/a><\/span> <\/div> <div class=\"info-item\"> <span class=\"info-name\">Họa sĩ:<\/span> <span class=\"info-value\"><a href=\".*\">(.*)<\/a><\/span> <\/div>/", $html, $author);
+        return [
+            'author' => $author[1],
+            'artist' => $author[2]
+        ];
+        
     }
 
     private function getVolumes() {
@@ -62,7 +68,7 @@ class DetailResource extends JsonResource
         $vols = array();
         
         foreach($nodes as $node) {
-            $detail = \preg_replace('/\s+/', ' ', $this->getInnerHtml($node));
+            $detail = $this->trimEndline($this->getInnerHtml($node));
             $preg = \preg_match("/<span class=\"sect-title\">(.*)<\/span>/m", $detail, $out);
             $chapterNodes = $this->getNodes($detail, "chapter-name", "", "div");
             //dd($chapterNodes);
@@ -73,7 +79,7 @@ class DetailResource extends JsonResource
                 $chapterDetailArr = \preg_match("/<a href=\"(.*)\" title=\"(.*)\">.*<\/a>/", $chapterDetail, $detail);
                 array_push($chapters, [
                     'title' => $detail[2],
-                    'url' => $detail[1]
+                    'url' => \Config::get('app.hakore_base_url') . \preg_replace('/truyen/', 'chapter', $detail[1]),
                 ]);
             }
             array_push($vols, [
