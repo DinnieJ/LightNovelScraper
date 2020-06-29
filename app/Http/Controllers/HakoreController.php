@@ -7,6 +7,8 @@ use App\Http\Traits\DomHandler;
 use Goutte\Client;
 use Exception;
 use App\Http\Resources\StoryResource;
+use App\Http\Resources\DetailResource;
+use Config;
 
 class HakoreController extends Controller
 {
@@ -14,7 +16,7 @@ class HakoreController extends Controller
 
     public function getList(Request $request){
         $page = $request->get('page', 1);
-        $url = "https://ln.hako.re/danh-sach?truyendich=1&dangtienhanh=1&tamngung=1&hoanthanh=1&sapxep=top&page=$page";
+        $url = Config::get('app.hakore_source_url') . "/danh-sach?truyendich=1&dangtienhanh=1&tamngung=1&hoanthanh=1&sapxep=top&page=$page";
         $html = $this->getHtmlData($url, [
             'body' => 0,
             'form' => 2,
@@ -44,8 +46,14 @@ class HakoreController extends Controller
         ], 200);
     }
 
-    public function getNovelDetail() {
-
+    public function getNovelDetail(Request $request, $url) {
+        $pageUrl = \Config::get('app.hakore_source_url') . "/truyen/$url";
+        $html = $this->getHtmlData($pageUrl);
+        $nodes = $this->getNodes($html, "col-12 col-lg-9 float-left");
+        return response()->json(new DetailResource([
+            'detail' => $this->getInnerHtml($nodes[0]),
+            'volList' => $this->getInnerHtml($nodes[1]),
+        ]), 200);
     }
 
     public function getGenre() {
