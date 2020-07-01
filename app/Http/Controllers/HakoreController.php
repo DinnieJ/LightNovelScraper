@@ -40,7 +40,7 @@ class HakoreController extends Controller
         }
         $maxPageNodes = $this->getNodes($html, "paging_item paging_prevnext next ");
         $maxPage = 1;
-        if(count($maxPageNodes) > 0) {
+        if (count($maxPageNodes) > 0) {
             $maxPageUrl = $this->getNodeAttrValue($maxPageNodes[0], 'href');
             \preg_match('/&page=([0-9]+)/', $maxPageUrl, $out);
             $maxPage = (int) $out[1];
@@ -77,23 +77,25 @@ class HakoreController extends Controller
         $content = explode('_', $novel);
         $pageUrl = \Config::get('app.hakore_source_url') . "/$content[0]/$content[1]/$chapter";
 
-        $html = $this->getHtmlData($pageUrl, [
-            '#chapter-content' => 0,
-        ]);
+        $html = $this->getHtmlData($pageUrl);
+        $chapterSettingNodes = $this->getNodes($html, "rd_sd-button_item rd_top", "", "a");
+        $prevUrl = \preg_replace('/\/(.*)\/(.*)\/(.*)/', "/api/hakore/chapter/$1_$2/$3", $this->getNodeAttrValue($chapterSettingNodes[0], 'href'));
+        $nextUrl = \preg_replace('/\/(.*)\/(.*)\/(.*)/', "/api/hakore/chapter/$1_$2/$3", $this->getNodeAttrValue($chapterSettingNodes[1], 'href'));
         $content = [];
         foreach ($this->getNodes($html, "", "", "p") as $node) {
             $txt = $this->getInnerHtml($node);
-            if(\preg_match('/src=\"(.+?)\"/', $txt, $url)) {
+            if (\preg_match('/src=\"(.+?)\"/', $txt, $url)) {
                 $txt = "--img--[$url[1]]";
             } else {
                 $txt = $this->getInnerHtml($node);
             }
             $content[] = \strip_tags($txt);
-
         };
 
         return response()->json([
-            'content' => $content
+            'content' => $content,
+            'prev' => $prevUrl,
+            'next' => $nextUrl,
         ], 200);
     }
 
@@ -105,7 +107,7 @@ class HakoreController extends Controller
         $nodes = $this->getNodes($html, "search-gerne_item include col-4 col-md-3 col-lg-4 col-xl-3");
         $genres = [];
 
-        foreach($nodes as $node) {
+        foreach ($nodes as $node) {
             $inner = $this->getInnerHtml($node);
 
             \preg_match("/<label class=\"genre_label\" data-genre-id=\"(.*)\">/", $inner, $id);
@@ -118,7 +120,8 @@ class HakoreController extends Controller
         ], 200);
     }
 
-    public function getListByGenreUrl(Request $request) {
+    public function getListByGenreUrl(Request $request)
+    {
         $pageUrl = Config::get('app.hakore_source_url') ."/danh-sach";
         $html = $this->getHtmlData($pageUrl, [
             '.section-content' => 2,
@@ -126,7 +129,7 @@ class HakoreController extends Controller
         ]);
         $nodes = $this->getNodes($html, "filter-type_item");
         $genres = [];
-        foreach($nodes as $node) {
+        foreach ($nodes as $node) {
             \preg_match("/<a href=\"(.*)\">(.*)<\/a>/", $this->getInnerHtml($node), $output);
 
             $genres[$output[2]] = \preg_replace("/https:\/\/ln.hako.re\/the-loai\//", Config::get('app.hakore_base_url') . "/all?genre=", $output[1]);
@@ -137,7 +140,8 @@ class HakoreController extends Controller
         ], 200);
     }
 
-    public function search(Request $request) {
+    public function search(Request $request)
+    {
         $keyword = $request->keyword ?? "";
         $selectedGenres = $request->selected ?? [];
         $ignoreGenres = $request->ignore ?? [];
@@ -146,7 +150,7 @@ class HakoreController extends Controller
         $selectGenresString = \implode(',', $selectedGenres);
         $ignoreGenresString = \implode(',', $ignoreGenres);
 
-        $pageUrl =  Config::get('app.hakore_source_url') 
+        $pageUrl =  Config::get('app.hakore_source_url')
                     . "/tim-kiem-nang-cao?"
                     . "title=$keyword"
                     . "&selectgenres=$selectGenresString"
@@ -160,13 +164,13 @@ class HakoreController extends Controller
         ]);
         $nodes = $this->getNodes($html, "thumb-item-flow col-4 col-md-3 col-lg-2");
 
-        if(count($nodes) == 0) {
+        if (count($nodes) == 0) {
             return response()->json([
                 'message' => 'Found nothing!'
             ], 404);
         }
         $result = [];
-        foreach($nodes as $node) {
+        foreach ($nodes as $node) {
             array_push($result, new StoryResource([
                 'content' => $this->getInnerHtml($node)
             ]));
