@@ -18,6 +18,7 @@ class DetailResource extends JsonResource
     {
         $authorNames = $this->getAuthor();
         return [
+            'novel_code' => $this['code'],
             'title' => $this->getTitle(),
             'cover' => $this->getCover(),
             'genres' => $this->getGenres(),
@@ -28,7 +29,8 @@ class DetailResource extends JsonResource
     }
 
     private function getTitle() {
-        return $this->getInnerHtml($this->getNodes($this['detail'], "", "", "a")[0]);
+        $title =  $this->getInnerHtml($this->getNodes($this['detail'], "", "", "a")[0]);
+        return $title;
     }
 
     private function getCover() {
@@ -52,13 +54,17 @@ class DetailResource extends JsonResource
     }
 
     private function getAuthor() {
-        $nodes = $this->getNodes($this['detail'], "series-information", "", "div");
-        $html = $this->trimEndline($this->getInnerHtml($nodes[0]));
+        $nodes = $this->getNodes($this['detail'], "info-item", "", "div");
+        $content = [];
+        foreach($nodes as $node) {
+            $content[] = \strip_tags($this->trimEndline($this->getInnerHtml($node)));
+        }
         //dd($html);
-        $authorPreg = \preg_match("/<div class=\"info-item\"> <span class=\"info-name\">Tác giả:<\/span> <span class=\"info-value \"><a href=\".*\">(.*)<\/a><\/span> <\/div> <div class=\"info-item\"> <span class=\"info-name\">Họa sĩ:<\/span> <span class=\"info-value\"><a href=\".*\">(.*)<\/a><\/span> <\/div>/", $html, $author);
+        //$authorPreg = \preg_match("/<div class=\"info-item\"> <span class=\"info-name\">Tác giả:<\/span> <span class=\"info-value \"><a href=\".*\">(.*)<\/a><\/span> <\/div> <div class=\"info-item\"> <span class=\"info-name\">Họa sĩ:<\/span> <span class=\"info-value\"><a href=\".*\">(.*)<\/a><\/span> <\/div>/", $html, $author);
+        //dd($author);
         return [
-            'author' => $author[1],
-            'artist' => $author[2]
+            'author' => $content[0],
+            'artist' => $content[1]
         ];
         
     }
@@ -76,14 +82,17 @@ class DetailResource extends JsonResource
 
             foreach($chapterNodes as $node) {
                 $chapterDetail = \preg_replace('/\s+/', ' ', $this->getInnerHtml($node));
-                $chapterDetailArr = \preg_match("/<a href=\"(.*)\" title=\"(.*)\">.*<\/a>/", $chapterDetail, $detail);
+                \preg_match("/<a href=\"(.*)\" title=.*>(.*)<\/a>/", $chapterDetail, $detail);
+                \preg_match('/\/.*\/.*\/(.*)/', $detail[1], $code);
                 array_push($chapters, [
+                    'code' => $code[1],
                     'title' => $detail[2],
-                    'url' => \Config::get('app.hakore_base_url') . \preg_replace('/truyen/', 'chapter', $detail[1]),
+                    'url' => \Config::get('app.hakore_base_url') . "/chapter/{$this['code']}" . "/{$code[1]}",
                 ]);
             }
+            $volTitle = \preg_replace("/<span .*>*<\/span>/", "", trim($out[1]));
             array_push($vols, [
-                'title' => trim($out[1]),
+                'title' => trim($volTitle),
                 'chapters' => $chapters
             ]);
         }

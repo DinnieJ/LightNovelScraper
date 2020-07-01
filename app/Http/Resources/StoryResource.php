@@ -20,7 +20,9 @@ class StoryResource extends JsonResource
         //dd($this['content']);
         $urls = $this->getAllUrl();
         $img = $this->getImg();
+        \preg_match("/\/api\/hakore\/novel\/(.*)/", $urls['url'], $code);
         return [
+            'code' => $code[1],
             'title' => $this->getTitle(),
             'url' => $urls['url'],
             'latest_chapter' => $this->getLatestChapter(),
@@ -58,9 +60,11 @@ class StoryResource extends JsonResource
 
     private function getAllUrl() {
         $node = $this->getNodes($this['content'], "", "", "a");
+        \preg_match('/\/(.*)\/(.*)/', $this->getNodeAttrValue($node[2], 'href'), $url );
+        \preg_match('/\/.*\/(.*)\/(.*)/', $this->getNodeAttrValue($node[0], 'href'), $chapterUrl);
         return [
-            'url' => \Config::get('app.hakore_base_url') . \str_replace('truyen', 'novel',  $this->getNodeAttrValue($node[2], 'href')),
-            'latest_chapter' => \Config::get('app.hakore_base_url') . \preg_replace('/truyen/', 'chapter', $this->getNodeAttrValue($node[0], 'href')),
+            'url' => \Config::get('app.hakore_base_url') . "/novel/$url[1]_$url[2]",
+            'latest_chapter' => \Config::get('app.hakore_base_url') . "/chapter/$url[1]_$url[2]/$chapterUrl[2]",
         ];
     }
 }

@@ -60,29 +60,36 @@ class HakoreController extends Controller
 
     public function getNovelDetail(Request $request, $url)
     {
-        $pageUrl = \Config::get('app.hakore_source_url') . "/truyen/$url";
+        $urlDetail = explode('_', $url);
+        // /dd($urlDetail[0]);
+        $pageUrl = \Config::get('app.hakore_source_url') . "/{$urlDetail[0]}/{$urlDetail[1]}";
         $html = $this->getHtmlData($pageUrl);
         $nodes = $this->getNodes($html, "col-12 col-lg-9 float-left");
         return response()->json(new DetailResource([
             'detail' => $this->getInnerHtml($nodes[0]),
             'volList' => $this->getInnerHtml($nodes[1]),
+            'code' => $url,
         ]), 200);
     }
 
     public function getChapterDetail(Request $request, $novel, $chapter)
     {
-        $pageUrl = \Config::get('app.hakore_source_url') . "/truyen/$novel/$chapter";
+        $content = explode('_', $novel);
+        $pageUrl = \Config::get('app.hakore_source_url') . "/$content[0]/$content[1]/$chapter";
+
         $html = $this->getHtmlData($pageUrl, [
             '#chapter-content' => 0,
         ]);
-        $content = "";
+        $content = [];
         foreach ($this->getNodes($html, "", "", "p") as $node) {
             $txt = $this->getInnerHtml($node);
-            if (\preg_match("/<img src=\"(.*)\" alt=\".*\">/", $txt, $imgSrc)) {
-                $content .= "--img--[" . $imgSrc[1] . "]\n";
+            if(\preg_match('/src=\"(.+?)\"/', $txt, $url)) {
+                $txt = "--img--[$url[1]]";
             } else {
-                $content .= $txt . "\n";
+                $txt = $this->getInnerHtml($node);
             }
+            $content[] = \strip_tags($txt);
+
         };
 
         return response()->json([
@@ -131,6 +138,42 @@ class HakoreController extends Controller
     }
 
     public function search(Request $request) {
+        $keyword = $request->keyword ?? "";
+        $selectedGenres = $request->selected ?? [];
+        $ignoreGenres = $request->ignore ?? [];
+        $status = $request->status ?? 0;
 
+        $selectGenresString = \implode(',', $selectedGenres);
+        $ignoreGenresString = \implode(',', $ignoreGenres);
+
+        $pageUrl =  Config::get('app.hakore_source_url') 
+                    . "/tim-kiem-nang-cao?"
+                    . "title=$keyword"
+                    . "&selectgenres=$selectGenresString"
+                    . "&rejectgenre=$ignoreGenresString"
+                    . "&status=$status";
+
+        $html = $this->getHtmlData($pageUrl, [
+            '#mainpart' => 0,
+            '.container' => 2,
+            '.basic-section' => 0,
+        ]);
+        $nodes = $this->getNodes($html, "thumb-item-flow col-4 col-md-3 col-lg-2");
+
+        if(count($nodes) == 0) {
+            return response()->json([
+                'message' => 'Found nothing!'
+            ], 404);
+        }
+        $result = [];
+        foreach($nodes as $node) {
+            array_push($result, new StoryResource([
+                'content' => $this->getInnerHtml($node)
+            ]));
+        }
+        
+        return response()->json([
+            'result' => $result
+        ], 200);
     }
 }

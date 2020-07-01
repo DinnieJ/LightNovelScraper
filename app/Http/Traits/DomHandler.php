@@ -33,7 +33,8 @@ trait DomHandler
         @$document->loadHtml('<?xml charset="utf-8"?>' . $html);
 
         $finder = new \DomXPath($document);
-        $query = "//$tag" . ($class ? "[contains(@class, '$class')]": "") . ($id ? "[@id='$id']" : "");
+       // $class = 
+        $query = "//$tag" . ($class ? "[contains(concat(' ', normalize-space(@class), ' '), '$class')]": "") . ($id ? "[@id='$id']" : "");
         foreach ($customAttr as $attr => $value) {
             $query .= ($value ? "[@$attr='$value']": "");
         }
