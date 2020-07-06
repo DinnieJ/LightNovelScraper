@@ -54,7 +54,8 @@ class HakoreController extends Controller
             'books' => $data,
             'genre' => $request->genre ?? null,
             'maxPage' => $maxPage,
-            'currentPage' => $page
+            'currentPage' => $page,
+            'search' => false
         ]), 200);
     }
 
@@ -146,6 +147,7 @@ class HakoreController extends Controller
         $selectedGenres = $request->selected ?? [];
         $ignoreGenres = $request->ignore ?? [];
         $status = $request->status ?? 0;
+        $page = $request->page ?? 1;
 
         $selectGenresString = \implode(',', $selectedGenres);
         $ignoreGenresString = \implode(',', $ignoreGenres);
@@ -175,9 +177,21 @@ class HakoreController extends Controller
                 'content' => $this->getInnerHtml($node)
             ]));
         }
+
+        $maxPageNodes = $this->getNodes($html, "paging_item paging_prevnext next ");
+        $maxPage = 1;
+        if (count($maxPageNodes) > 0) {
+            $maxPageUrl = $this->getNodeAttrValue($maxPageNodes[0], 'href');
+            \preg_match('/&page=([0-9]+)/', $maxPageUrl, $out);
+            $maxPage = (int) $out[1];
+        }
         
-        return response()->json([
-            'result' => $result
-        ], 200);
+        return response()->json(new ListResource([
+            'books' => $result,
+            'maxPage' => $maxPage,
+            'currentPage' => $page,
+            'search' => true,
+            'maxPage' => $maxPage,
+        ]), 200);
     }
 }

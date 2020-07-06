@@ -21,6 +21,7 @@ class DetailResource extends JsonResource
             'novel_code' => $this['code'],
             'title' => $this->getTitle(),
             'cover' => $this->getCover(),
+            'description' => $this->getDescription(),
             'genres' => $this->getGenres(),
             'author' => $authorNames['author'],
             'artist'  => $authorNames['artist'],
@@ -37,6 +38,14 @@ class DetailResource extends JsonResource
         $style = $this->getNodeAttrValue($this->getNodes($this['detail'], "content img-in-ratio")[0], 'style');
         $value = \preg_match("#\('(.*?)'\)#", $style, $out);
         return $out[1];
+    }
+
+    private function getDescription() {
+        $descriptionNodes = $this->getNodes($this['detail'], "summary-content");
+
+        $descriptionArr = array_filter(\explode("\n", strip_tags($this->getInnerHtml($descriptionNodes[0]))));
+        
+        return $descriptionArr;
     }
 
     private function getGenres() {
@@ -59,9 +68,7 @@ class DetailResource extends JsonResource
         foreach($nodes as $node) {
             $content[] = \strip_tags($this->trimEndline($this->getInnerHtml($node)));
         }
-        //dd($html);
-        //$authorPreg = \preg_match("/<div class=\"info-item\"> <span class=\"info-name\">Tác giả:<\/span> <span class=\"info-value \"><a href=\".*\">(.*)<\/a><\/span> <\/div> <div class=\"info-item\"> <span class=\"info-name\">Họa sĩ:<\/span> <span class=\"info-value\"><a href=\".*\">(.*)<\/a><\/span> <\/div>/", $html, $author);
-        //dd($author);
+
         return [
             'author' => $content[0],
             'artist' => $content[1]

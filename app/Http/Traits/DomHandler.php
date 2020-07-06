@@ -3,6 +3,7 @@
 namespace App\Http\Traits;
 
 use Goutte\Client;
+use Exception;
 
 trait DomHandler
 {
