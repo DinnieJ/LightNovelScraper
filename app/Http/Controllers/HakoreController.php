@@ -157,7 +157,8 @@ class HakoreController extends Controller
                     . "title=$keyword"
                     . "&selectgenres=$selectGenresString"
                     . "&rejectgenre=$ignoreGenresString"
-                    . "&status=$status";
+                    . "&status=$status"
+                    . "&page=$page";
 
         $html = $this->getHtmlData($pageUrl, [
             '#mainpart' => 0,

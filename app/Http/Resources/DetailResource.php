@@ -68,10 +68,12 @@ class DetailResource extends JsonResource
         foreach($nodes as $node) {
             $content[] = \strip_tags($this->trimEndline($this->getInnerHtml($node)));
         }
+        \preg_match("/Tác giả:\s+(.*)/", $content[0], $author);
+        \preg_match("/Họa sĩ:\s+(.*)/", $content[1], $artist);
 
         return [
-            'author' => $content[0],
-            'artist' => $content[1]
+            'author' => $author[1] ?? "Unknown",
+            'artist' => $artist[1] ?? "Unknown"
         ];
         
     }
