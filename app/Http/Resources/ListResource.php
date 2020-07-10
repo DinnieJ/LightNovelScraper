@@ -20,7 +20,7 @@ class ListResource extends JsonResource
             'count' => count($this['books']),
             'prevPage' => $this->getPrevPage($dir),
             'nextPage' => $this->getNextPage($dir),
-            'current' => $this['currentPage'],
+            'current' => (int) $this['currentPage'],
             'lastPage' => $this['maxPage'],
             'lastPageUrl' => $this->getLastPageUrl($dir)
         ];
