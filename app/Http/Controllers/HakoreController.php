@@ -116,9 +116,7 @@ class HakoreController extends Controller
             $genres[$name[1]] = $id[1];
         }
 
-        return response()->json([
-            'genres' => $genres
-        ], 200);
+        return response()->json($genres, 200);
     }
 
     public function getListByGenreUrl(Request $request)
