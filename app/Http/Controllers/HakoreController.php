@@ -142,19 +142,16 @@ class HakoreController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword ?? "";
-        $selectedGenres = $request->selected ?? [];
-        $ignoreGenres = $request->ignore ?? [];
+        $selectedGenres = $request->selected ?? "";
+        $ignoreGenres = $request->ignore ?? "";
         $status = $request->status ?? 0;
         $page = $request->page ?? 1;
-
-        $selectGenresString = \implode(',', $selectedGenres);
-        $ignoreGenresString = \implode(',', $ignoreGenres);
 
         $pageUrl =  Config::get('app.hakore_source_url')
                     . "/tim-kiem-nang-cao?"
                     . "title=$keyword"
-                    . "&selectgenres=$selectGenresString"
-                    . "&rejectgenre=$ignoreGenresString"
+                    . "&selectgenres=$selectedGenres"
+                    . "&rejectgenres=$ignoreGenres"
                     . "&status=$status"
                     . "&page=$page";
 
@@ -191,6 +188,9 @@ class HakoreController extends Controller
             'currentPage' => $page,
             'search' => true,
             'maxPage' => $maxPage,
+            'keyword' => $keyword,
+            'selectGenres' => $selectedGenres,
+            'ignoreGenres' => $ignoreGenres
         ]), 200);
     }
 }

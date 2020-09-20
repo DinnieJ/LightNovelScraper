@@ -24,5 +24,5 @@ Route::group(['prefix' => 'hakore'], function () {
     Route::get('/chapter/{novel}/{chapter}', 'HakoreController@getChapterDetail');
     Route::get('/genrefilter', 'HakoreController@getGenreFilter');
     Route::get('/genrelisturl', 'HakoreController@getListByGenreUrl');
-    Route::post('/search', 'HakoreController@search');
+    Route::get('/search', 'HakoreController@search');
 });

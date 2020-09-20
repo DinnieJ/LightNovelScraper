@@ -14,7 +14,7 @@ class ListResource extends JsonResource
      */
     public function toArray($request)
     {
-        $dir = $this['search'] ? "tim-kiem-nang-cao" : "all";
+        $dir = $this['search'] ? "search" : "all";
         return [
             'books' => $this['books'],
             'count' => count($this['books']),
@@ -28,14 +28,28 @@ class ListResource extends JsonResource
 
     private function getPrevPage($dir) {
         $prevPage = $this['currentPage'] > 1 ? $this['currentPage'] - 1 : null;
-
-        return $prevPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$prevPage" . (array_key_exists('genre', $this->resource) ? "&genre={$this['genre']}" : "") : null;
+        if ($dir == "all") {
+            return $prevPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$prevPage" . (array_key_exists('genre', $this->resource) ? "&genre={$this['genre']}" : "") : null;
+        } else {
+            return $prevPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$prevPage" .
+                                "&selected={$this['selectGenres']}" .
+                                "&ignore={$this['ignoreGenres']}" .
+                                "&keyword={$this['keyword']}"
+                                : null;
+        }
     }
-
     private function getNextPage($dir) {
         $nextPage = $this['currentPage'] < $this['maxPage'] ? $this['currentPage'] + 1 : null;
 
-        return $nextPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$nextPage" . (array_key_exists('genre', $this->resource) ? "&genre={$this['genre']}" : "") : null;
+        if ($dir == "all") {
+            return $nextPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$nextPage" . (array_key_exists('genre', $this->resource) ? "&genre={$this['genre']}" : "") : null;
+        } else {
+            return $nextPage ? \Config::get('app.hakore_base_url') . "/$dir?page=$nextPage" .
+                                "&selected={$this['selectGenres']}" .
+                                "&ignore={$this['ignoreGenres']}" .
+                                "&keyword={$this['keyword']}"
+                                : null;
+        }
     }
 
     private function getLastPageUrl($dir) {
