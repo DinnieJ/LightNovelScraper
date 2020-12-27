@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
+        \Blade::setEchoFormat('e(utf8_encode(%s))');
     }
 
     /**

@@ -14,6 +14,8 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'hakore_source_url' => env('HAKORE_SOURCE', 'https://ln.hako.re'),
+    'hakore_base_url' =>  env('HAKORE_BASE', '/api/hakore'),
 
     /*
     |--------------------------------------------------------------------------

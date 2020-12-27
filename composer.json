@@ -9,9 +9,12 @@
     "license": "MIT",
     "require": {
         "php": "^7.2",
+        "fabpot/goutte": "^4.0",
         "fideloper/proxy": "^4.0",
+        "html2text/html2text": "^4.3",
         "laravel/framework": "^6.0",
-        "laravel/tinker": "^1.0"
+        "laravel/tinker": "^1.0",
+        "soundasleep/html2text": "^1.1"
     },
     "require-dev": {
         "facade/ignition": "^1.4",
